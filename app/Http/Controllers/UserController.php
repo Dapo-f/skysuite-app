@@ -25,7 +25,7 @@ class UserController extends Controller
                 'regex:/^(\+234|0)[789][01]\d{8}$/'
             ],
             'alternative_tel' => [
-                'required',
+                'nullable',
                 'string',
                 'unique:users,tel',
                 'regex:/^(\+234|0)[789][01]\d{8}$/'
