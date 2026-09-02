@@ -1,10 +1,12 @@
 <?php
 
 namespace App\Http\Controllers;
+use App\Models\AccountVerification;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
@@ -42,11 +44,6 @@ class UserController extends Controller
             ], 400);
         }
 
-        // return $request->all();
-        // DB::table('users')->insert([
-        //     'firstname' => $request->input('firstname'),
-
-        // ])
         try{
             DB::beginTransaction();
             $user = new User;
@@ -61,6 +58,29 @@ class UserController extends Controller
             $user->id_type = $request->id_type;
             $user->id_number = $request->id_number;
             $user->save();
+
+            // Remove existing verification tokens for the user
+            DB::table('account_verifications')->where('email', $user->email)->delete();
+
+            // Generate a verification token
+            $token = rand(100000, 999999);
+
+            // Store token in the database
+            AccountVerification::create([
+                'email' => $user->email,
+                'token' => $token,
+                'expires_at' => now()->addMinutes(10),
+            ]);
+
+            $url = config('app.frontend_url') . "/verify-account?token={$token}&email={$user->email}";
+            // Send email verification
+            Mail::send('emails.user-verification', [
+                'user' => $user,
+                'url' => $url,
+                'token' => $token,
+            ], function ($message) use ($user){
+                $message->to($user->email)->subject('Verify Your Account');
+            });
 
             DB::commit();
             return response()->json([
