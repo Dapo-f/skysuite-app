@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
 {
-    //Registration method
+    //Register
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -152,6 +152,7 @@ class UserController extends Controller
         }
     }
 
+    // Resend verification
     public function resendEmailVerification(Request $request)
     {
         $validator = Validator::make($request->all(), [
