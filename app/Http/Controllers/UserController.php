@@ -135,6 +135,12 @@ class UserController extends Controller
                 ], 400);
             }
 
+            if ($user->email_verified_at != null) {
+                return response()->json([
+                    'message' => 'User already verified',
+                ], 400);
+            }
+
             $user->email_verified_at = now();
             $user->save();
 
@@ -172,6 +178,12 @@ class UserController extends Controller
             if (!$user) {
                 return response()->json([
                     'message' => 'User not found',
+                ], 400);
+            }
+
+            if ($user->email_verified_at != null) {
+                return response()->json([
+                    'message' => 'User already verified',
                 ], 400);
             }
 
