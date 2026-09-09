@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
@@ -241,8 +242,33 @@ class UserController extends Controller
         }
 
         try {
-            
+            $throttleKey = strtolower($request->input('email')) . "|" . $request->ip();
 
+            $second = RateLimiter::availableIn($throttleKey);
+            $min = $second / 60;
+            if(RateLimiter::tooManyAttempts($throttleKey, 3)) {
+                return response()->json([
+                    'message' => "Too many login attempts. Please try again later in {$min} minutes",
+                ], 429);
+            }
+
+            $user = User::where('email', $request->input('email'))->first();
+            if(!$user || !Hash::check($request->input('password'), $user->password)) {
+                RateLimiter::hit($throttleKey, 300);
+                return response()->json([
+                    'message' => 'Invalid email or password',
+                ], 401);
+            }
+
+            RateLimiter::clear($throttleKey);
+
+            $token = $user->createToken('user_token')->plainTextToken;
+
+            return response()->json([
+                'message' => "Login Successfully",
+                'token' => $token,
+                'user' => $user,
+            ],200);
         } catch(\Exception $errors) {
             return response()->json([
                 'message' => 'Server Error',
@@ -250,4 +276,20 @@ class UserController extends Controller
             ],500);
         }
     }
+
+    public function all() {
+        try {
+            $users = User::get();
+            return $users;
+
+        } catch(\Exception $errors) {
+            return response()->json([
+                'message' => 'Server Error',
+                'errors' => $errors,
+            ],500);
+        }   
+        
+
+    }
+    
 }
