@@ -5,3 +5,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/register',[UserController::class, 'store']);
+Route::post('/verify', [UserController::class, 'verifyEmail']);
+Route::post('/resend/verification', [UserController::class, 'resendEmailVerification']);
+Route::post('/login', [UserController::class, 'login']);
+
+Route::get('/all', [UserController::class, 'all'])->middleware('auth:sanctum');
+// Route::get('/profile', [UserController::class, 'show']);
