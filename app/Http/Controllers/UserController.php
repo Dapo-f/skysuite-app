@@ -225,4 +225,29 @@ class UserController extends Controller
             ], 500);
         }
     }
+
+    // Login method
+    public function login(Request $request) {
+        $validator = Validator::make($request->all(),[
+            'email' => 'required|email',
+            'password' => 'required|string',
+        ]);
+
+        if($validator->fails()) {
+            return response()->json([
+                'message' => "Login Failed",
+                'errors' => $validator->errors(),
+            ],400);
+        }
+
+        try {
+            
+
+        } catch(\Exception $errors) {
+            return response()->json([
+                'message' => 'Server Error',
+                'errors' => $errors,
+            ],500);
+        }
+    }
 }
